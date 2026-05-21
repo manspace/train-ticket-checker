@@ -26,24 +26,44 @@ def check_tickets(request: TicketRequest):
     except Exception:
         passengers = 1
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto("https://booking.uz.gov.ua/", wait_until="networkidle", timeout=60000)
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"]
+            )
+            page = browser.new_page()
+            page.goto(
+                "https://booking.uz.gov.ua/",
+                wait_until="domcontentloaded",
+                timeout=30000
+            )
 
-        title = page.title()
-        text = page.locator("body").inner_text(timeout=30000)
+            title = page.title()
+            text = page.locator("body").inner_text(timeout=15000)
 
-        browser.close()
+            browser.close()
 
-    return {
-        "found": False,
-        "from": request.from_city,
-        "to": request.to_city,
-        "date": request.date,
-        "wagon": request.wagon,
-        "passengers": passengers,
-        "page_title": title,
-        "preview": text[:500],
-        "message": "Playwright відкрив сайт УЗ. Наступним кроком додамо введення маршруту."
-    }
+        return {
+            "found": False,
+            "from": request.from_city,
+            "to": request.to_city,
+            "date": request.date,
+            "wagon": request.wagon,
+            "passengers": passengers,
+            "page_title": title,
+            "preview": text[:500],
+            "message": "Playwright відкрив сайт УЗ. Наступним кроком додамо введення маршруту."
+        }
+
+    except Exception as e:
+        return {
+            "found": False,
+            "from": request.from_city,
+            "to": request.to_city,
+            "date": request.date,
+            "wagon": request.wagon,
+            "passengers": passengers,
+            "error": str(e),
+            "message": "Сервіс запустився, але не зміг відкрити сайт УЗ. Помилку повернув у поле error."
+        }
