@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Any
+from playwright.sync_api import sync_playwright
 
 app = FastAPI()
 
@@ -15,7 +16,7 @@ class TicketRequest(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "ok", "message": "Train ticket checker is running"}
+    return {"status": "ok", "message": "Train ticket checker is running with Playwright"}
 
 
 @app.post("/check")
@@ -25,6 +26,16 @@ def check_tickets(request: TicketRequest):
     except Exception:
         passengers = 1
 
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto("https://booking.uz.gov.ua/", wait_until="networkidle", timeout=60000)
+
+        title = page.title()
+        text = page.locator("body").inner_text(timeout=30000)
+
+        browser.close()
+
     return {
         "found": False,
         "from": request.from_city,
@@ -32,5 +43,7 @@ def check_tickets(request: TicketRequest):
         "date": request.date,
         "wagon": request.wagon,
         "passengers": passengers,
-        "message": "Сервіс працює. Реальну перевірку УЗ підключимо наступним кроком."
+        "page_title": title,
+        "preview": text[:500],
+        "message": "Playwright відкрив сайт УЗ. Наступним кроком додамо введення маршруту."
     }
