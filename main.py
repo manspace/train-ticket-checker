@@ -40,8 +40,13 @@ def check_tickets(request: TicketRequest):
                 timeout=30000
             )
 
-            title = page.title()
-            text = page.locator("body").inner_text(timeout=15000)
+            page.wait_for_timeout(5000)
+
+title = page.title()
+html = page.content()
+text = page.locator("body").inner_text(timeout=15000)
+
+debug_preview = html[:1000]
 
             browser.close()
 
@@ -53,8 +58,8 @@ def check_tickets(request: TicketRequest):
             "wagon": request.wagon,
             "passengers": passengers,
             "page_title": title,
-            "preview": text[:500],
-            "message": "Playwright відкрив сайт УЗ. Preview: " + text[:500]
+            "preview": debug_preview,
+"message": "Playwright відкрив сайт УЗ. HTML preview: " + debug_preview
         }
 
     except Exception as e:
