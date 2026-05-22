@@ -26,16 +26,22 @@ def check_tickets(request: TicketRequest):
                 args=["--no-sandbox", "--disable-dev-shm-usage"]
             )
 
+            page = browser.new_page()
+            page.goto("https://example.com", wait_until="domcontentloaded", timeout=30000)
+
+            title = page.title()
+            text = page.locator("body").inner_text(timeout=10000)
+
             browser.close()
 
         return {
             "found": False,
-            "message": "Playwright browser successfully launched in Railway."
+            "message": "Playwright відкрив example.com. Title: " + title + ". Text: " + text[:200]
         }
 
     except Exception as e:
         return {
             "found": False,
-            "message": "Playwright failed.",
+            "message": "Playwright failed on example.com.",
             "error": str(e)
         }
