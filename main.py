@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Any
+import requests
 
 app = FastAPI()
 
@@ -26,28 +27,19 @@ def check_tickets(request: TicketRequest):
         passengers = 1
 
     try:
-        from playwright.sync_api import sync_playwright
+        url = "https://booking.uz.gov.ua/api/station/search/"
+        params = {"term": request.from_city}
 
-        with sync_playwright() as p:
-            browser = p.chromium.launch(
-                headless=True,
-                args=["--no-sandbox", "--disable-dev-shm-usage"]
-            )
-
-            page = browser.new_page()
-            page.goto(
-                "https://booking.uz.gov.ua/",
-                wait_until="domcontentloaded",
-                timeout=60000
-            )
-
-            page.wait_for_timeout(10000)
-
-            title = page.title()
-            html = page.content()
-            text = html[:1000]
-
-            browser.close()
+        response = requests.get(
+            url,
+            params=params,
+            timeout=20,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept": "application/json, text/plain, */*",
+                "Referer": "https://booking.uz.gov.ua/"
+            }
+        )
 
         return {
             "found": False,
@@ -56,7 +48,9 @@ def check_tickets(request: TicketRequest):
             "date": request.date,
             "wagon": request.wagon,
             "passengers": passengers,
-            "message": "УЗ title: " + title + " HTML: " + text
+            "status_code": response.status_code,
+            "response_preview": response.text[:1000],
+            "message": "Тестую внутрішній API станцій УЗ."
         }
 
     except Exception as e:
@@ -67,6 +61,6 @@ def check_tickets(request: TicketRequest):
             "date": request.date,
             "wagon": request.wagon,
             "passengers": passengers,
-            "message": "Playwright не зміг відкрити УЗ.",
+            "message": "Помилка при зверненні до API станцій УЗ.",
             "error": str(e)
         }
