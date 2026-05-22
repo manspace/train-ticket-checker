@@ -18,16 +18,24 @@ def home():
 @app.post("/check")
 def check_tickets(request: TicketRequest):
     try:
-        passengers = int(request.passengers)
-    except Exception:
-        passengers = 1
+        from playwright.sync_api import sync_playwright
 
-    return {
-        "found": False,
-        "from": request.from_city,
-        "to": request.to_city,
-        "date": request.date,
-        "wagon": request.wagon,
-        "passengers": passengers,
-        "message": "Railway API працює. Повернули стабільну версію."
-    }
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"]
+            )
+
+            browser.close()
+
+        return {
+            "found": False,
+            "message": "Playwright browser successfully launched in Railway."
+        }
+
+    except Exception as e:
+        return {
+            "found": False,
+            "message": "Playwright failed.",
+            "error": str(e)
+        }
