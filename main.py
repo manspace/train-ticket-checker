@@ -27,10 +27,19 @@ def check_tickets(request: TicketRequest):
             )
 
             page = browser.new_page()
-            page.goto("https://example.com", wait_until="domcontentloaded", timeout=30000)
+            page.goto(
+    "https://booking.uz.gov.ua/",
+    wait_until="domcontentloaded",
+    timeout=60000
+)
+
+page.wait_for_timeout(10000)
+
+title = page.title()
+html = page.content()
 
             title = page.title()
-            text = page.locator("body").inner_text(timeout=10000)
+            text = html[:1000]
 
             browser.close()
 
