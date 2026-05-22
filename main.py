@@ -54,7 +54,7 @@ def check_tickets(request: TicketRequest):
             "passengers": passengers,
             "page_title": title,
             "preview": text[:500],
-            "message": "Playwright відкрив сайт УЗ. Наступним кроком додамо введення маршруту."
+            "message": "Playwright відкрив сайт УЗ. Preview: " + text[:500]
         }
 
     except Exception as e:
